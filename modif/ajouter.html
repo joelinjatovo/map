@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="FTA Team">
+
+    <title>Add new solution</title>
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/starter-template.css" rel="stylesheet">
+    <link href="css/font-awesome.min.css" rel="stylesheet">
+      
+    <style>
+       #map {
+        height: 500px;
+        width: 100%;
+       }
+    </style>
+      
+    <script src="js/jquery.min.js"></script>
+    <script src="https://apis.google.com/js/platform.js?onload=_onGoogleLoad" async defer></script>
+    <script>
+        var _clientID = '795362499398-njcj3441irlqjtj9srlphuubf2efqaol.apps.googleusercontent.com';
+        var _apiKey = 'AIzaSyCtRuDbjjrHacZ6EqZySofNueLBLkrNxwI';
+        var _auth2;
+        var _marker;
+        var _onGoogleLoad = function () {
+          gapi.load('client:auth2', function () {
+            _auth2 = gapi.auth2.init({
+              'apiKey': _apiKey,
+              'client_id': _clientID,
+              'scope': 'https://www.googleapis.com/auth/fusiontables',
+              'immediate': false
+            });
+          })
+        }
+    
+        function auth() {
+            var config = {
+                'client_id': _clientID,
+                'scope': 'https://www.googleapis.com/auth/fusiontables',
+                'immediate': false
+            };
+
+            gapi.auth2.authorize(config, function () {
+                console.log('login complete');
+                console.log(gapi.auth.getToken());
+            });
+        }
+        
+        function initMap() {
+            var map = new google.maps.Map(document.getElementById('map'), {
+                center: {lat: 25, lng:  25.1},
+                zoom: 2
+            });
+            _marker = new google.maps.Marker({
+              position: {lat: 25, lng:  25.1},
+              draggable:true,
+              map: map
+            });
+
+            google.maps.event.addListener(map, 'click', function(event) {
+                 var lat = document.getElementById("latitude").value = event.latLng.lat()
+                 var lng = document.getElementById("longitude").value = event.latLng.lng()
+                 placeMarkerAndPanTo(event.latLng, map);
+            });
+            
+            _marker.addListener('dragend', function() {
+                 var lat = document.getElementById("latitude").value = _marker.getPosition().lat()
+                 var lng = document.getElementById("longitude").value = _marker.getPosition().lng()
+            });
+        }
+        
+        function placeMarkerAndPanTo(latLng, map) {
+            _marker.setMap(null);
+            _marker = new google.maps.Marker({
+                position: latLng,
+                draggable:true,
+                map: map
+            });
+            map.panTo(latLng);
+        }
+        
+        jQuery(document).ready(function($){
+            $(document).on('click','.add-application',function(event){
+                event.preventDefault();
+                
+                $(this).find('i').removeClass('fa fa-send').addClass(' fa fa-spinner fa-spin');
+                
+                var _ref2, _ref3, _ref4, inputName, inputType, input, option, _l, _k, _len2, _len3;
+                var $self = $(this);
+                var params = [];
+                var values = [];
+                _ref2 = $(this).closest('.forms').find("input, textarea, select, button");
+
+                for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
+                  input = _ref2[_k];
+                  inputName = input.getAttribute("name");
+                  inputType = input.getAttribute("type");     
+
+                  if (input.tagName === "SELECT" && input.hasAttribute("multiple")) {
+                    _ref3 = input.options;
+                    for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
+                      option = _ref3[_l];
+                      if (option.selected) {
+                        params.push(inputName);
+                        values.push("\'"+input.value+"\'");
+                      }
+                    }
+                  } else if (!inputType || ((_ref4 = inputType.toLowerCase()) !== "checkbox" && _ref4 !== "radio") || input.checked) {
+                        params.push(inputName);
+                        values.push("\'"+input.value+"\'");
+                  }
+                }
+
+                if (!gapi.auth2.getAuthInstance().isSignedIn.get()) {
+                    auth();
+                }
+                
+
+                gapi.client.load('fusiontables', 'v2', function () {
+                    var query = "INSERT INTO "
+                        + '1sxcsH821Lzk3N2jieHrpmubotsYfyiJ_Ot1HEP6q'  
+                        // Name of the Copy of  the Application '1lKL-aVStTG1cBRf-6PwL14uh4EiefNblBykTU9Ku'
+                        + ' (' + params.join(',') + ')'
+                        + ' VALUES (' + values.join(',') + ');';
+
+                    gapi.client.fusiontables.query.sql({ sql: query }).execute(function (response) { 
+                        console.log(response); 
+                        if(response.error)
+                        {
+                            $('.query-result').append('<div class="alert alert-danger" role="alert"> <strong> Erreur '+response.code+' <\/strong> '+response.error.message+' <\/div>');
+                        }
+                        else
+                        {
+                            $('.query-result').append('<div class="alert alert-success" role="alert"> <strong> New solution added in database.<\/strong> <\/div>');
+                        }
+                
+                        $self.find('i').removeClass(' fa fa-spinner fa-spin').addClass('fa fa-send');
+                    });
+                });
+
+            });
+        });
+        
+    </script>
+      
+  </head>
+
+  <body>
+        <div class="container">
+            <div class="row">
+                <a class="btn btn-sm btn-default" href="index.html">Map</a>
+                <a class="btn btn-sm btn-info" href="ajouter.html">Add New solution</a>
+            </div>
+        </div>
+
+        <div class="container">
+
+          <div class="row">
+              <div class="col-md-12" style="margin-top: 10px;">
+                  <div class="col-md-12">
+                      <section class="panel">
+                          <div class="panel-body">
+                              <div class="row">
+                                  <div class="query-result"></div>
+                              </div>
+                              <form class="forms" role="form">
+                                  <ul id="myTab" class="nav nav-tabs">
+                                    <li class=""><a href="#basic" data-toggle="tab" aria-expanded="false">Main</a></li>
+                                    <li class=""><a href="#information" data-toggle="tab" aria-expanded="false">Description</a></li>            
+                                    <li class=""><a href="#category" data-toggle="tab" aria-expanded="false">Metadata</a></li>                                  
+                                    <li class=""><a href="#contact" data-toggle="tab" aria-expanded="false">Contact information</a></li>                                    
+                                    <li class="active"><a href="#home" data-toggle="tab" aria-expanded="true">Geolocalisation</a></li>
+                                    <li class=""><a href="#information2" data-toggle="tab" aria-expanded="false">Other information</a></li> 
+                                  </ul>
+                                  <div id="myTabContent" class="tab-content" style="margin-top:10px;">
+                                      
+                                    <div class="tab-pane active" id="home">
+                                          <div class="col-md-6">
+                                              <div class="form-group">
+                                                  <label for="latitude">Latitude</label>
+                                                  <input type="text" name="latitude" class="form-control" id="latitude" placeholder="Latitude">
+                                              </div>
+                                          </div>
+                                          <div class="col-md-6">
+                                              <div class="form-group">
+                                                  <label for="longitude">Longitude</label>
+                                                  <input type="text" name="longitude" class="form-control" id="longitude" placeholder="Longitude">
+                                              </div>
+                                          </div>
+                                        
+                                          <div class="col-md-12" style="margin-bottom:10px;">
+
+                                              <div id="map">
+
+                                              </div>
+                                          </div>
+                                    </div>
+                                    <div class="tab-pane" id="basic">
+                                          <div class="col-md-6">
+                                              <div class="form-group">
+                                                  <label for="Solution">Name</label>
+                                                  <input type="text" name="Solution" class="form-control" id="Solution" placeholder="Solution's name">
+                                              </div>
+                                          </div>
+                                          <div class="col-md-6">
+                                              <div class="form-group">
+                                                  <label for="Developer">Developer, Author</label>
+                                                  <input type="text" name="Developer" class="form-control" id="Developer" placeholder="Who has developped the solution ?">
+                                              </div>
+                                          </div>
+                                    </div>
+                                    <div class="tab-pane" id="contact">
+                                          <div class="col-md-6">
+                                              <div class="form-group">
+                                                  <label for="adresse">Address</label>
+                                                  <input type="adresse" name="Address" class="form-control" id="adresse" placeholder="Organization and physical address"></textarea>
+                                              </div>
+                                          </div>
+                                          <div class="col-md-6">
+                                              <div class="form-group">
+                                                  <label for="tel">Phone</label>
+                                                  <input type="tel" name="Phone" class="form-control" id="tel" placeholder="Phone with Int'l code">
+                                              </div>
+                                          </div>
+                                          <div class="col-md-6">
+                                              <div class="form-group">
+                                                  <label for="email">Email</label>
+                                                  <input type="email"  name="Email" class="form-control" id="email" placeholder="E-mail">
+                                              </div>
+                                          </div>
+                                          <div class="col-md-6">
+                                              <div class="form-group">
+                                                  <label for="site">Website</label>
+                                                  <input type="text"  name="Site" class="form-control" id="site" placeholder="Website or Blog">
+                                              </div>
+                                          </div>
+                                          <div class="col-md-6">
+                                              <div class="form-group">
+                                                  <label for="linkedin">Social media</label>
+                                                  <input type="text" name="Linkedin" class="form-control" id="linkedin" placeholder="LinkedIn or FB ...">
+                                              </div>
+                                          </div>
+                                    </div>
+                                      
+                                    <div class="tab-pane" id="category">
+                                           <div class="col-md-6">
+                                              <div class="form-group">
+                                                  <label for="type">Type</label>
+                                                  <select name="Type" class="form-control" id="type">
+                                                      <option>Type</option>
+                                                      <option value="Mobile" >Mobile</option>
+                                                      <option value="Web" >Web</option>
+                                                      <option value="Java" >Java</option>
+                                                      <option value="Web + mobile" >Web + mobile</option>
+                                                      <option value="Drone" >Drone</option>
+                                                      <option value="Other" >Other</option>
+                                                  </select>
+                                              </div>
+                                          </div>
+                                          <div class="col-md-6">
+                                              <div class="form-group">
+                                                  <label for="status">Status</label>
+                                                  <select name="Status" class="form-control" id="status">
+                                                      <option>Status</option>
+                                                      <option value="Under construction" >Under construction</option>
+                                                      <option value="Testing" >Testing</option>
+                                                      <option value="Demo version" >Demo version</option>
+                                                      <option value="Working" >Working</option>
+                                                      <option value="Awarded" >Awarded</option>
+                                                  </select>
+                                              </div>
+                                          </div>
+                                          <div class="col-md-6">
+                                              <div class="form-group">
+                                                  <label for="category1">Origin</label>
+                                                  <select name="Origin" class="form-control" id="category1">
+                                                      <option >Continent</option>
+                                                      <option value="Africa" >Africa</option>
+                                                      <option value="Asia Pacific" >Asia and Pacific</option>
+                                                      <option value="Australasia Pacific" >Australasia Pacific</option>
+               					      <option value="Europe" >Europe</option>
+               		       			      <option value="North America" >North America</option>
+                                                      <option value="South America" >South America</option>
+                                                  </select>
+                                              </div>
+                                          </div>
+                                    </div>
+                                      
+                                    <div class="tab-pane" id="information">
+                                          <div class="col-md-6">
+                                              <div class="form-group">
+                                                  <label for="information">Description</label>
+                                                  <textarea rows="10"  name="Description"  class="form-control" id="information" placeholder="What is this solution about ?"></textarea>
+                                              </div>
+                                          </div>
+                                    </div>
+                                    <div class="tab-pane" id="information2">
+                                          <div class="col-md-6">
+                                              <div class="form-group">
+                                                  <label for="information2">Other info</label>
+                                                  <textarea rows="10" name="Other"  class="form-control" id="information2" placeholder="Provide other relevant information"></textarea>
+                                              </div>
+                                          </div>
+                                    </div>
+                                      
+                                  </div>
+                                  
+                                  <div class="col-md-12">
+                                    <a class="btn btn-info "><span class="add-application"><i class="fa fa-send"></i> Insert in database</span></a>
+                                  </div>
+                                  
+                              </form>
+                          </div>
+                      </section>
+                  </div>
+              </div>
+          </div>
+
+        </div><!-- /.container -->
+      
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/ajax.js"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCtRuDbjjrHacZ6EqZySofNueLBLkrNxwI&callback=initMap"></script>
+  </body>
+</html>

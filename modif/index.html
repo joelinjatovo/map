@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="FTA Team">
+
+    <title>ICT4RAS solutions</title>
+
+    <link href="css/devsite-google-green.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/starter-template.css" rel="stylesheet">
+    <link href="css/font-awesome.min.css" rel="stylesheet">
+      
+    <style>
+        .modal {
+            margin: 10px;
+        }
+        .modal-dialog {
+            width: 100%;
+        }
+       #map {
+        height: 500px;
+        width: 100%;
+       }
+      #floating-btn {
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        z-index: 5;
+        padding: 5px;
+        line-height: 25px;
+        padding-left: 10px;
+      }
+      #floating-btn-2 {
+        position: absolute;
+        top: 10px;
+        right: 80px;
+        z-index: 5;
+        padding: 5px;
+        line-height: 25px;
+        padding-left: 10px;
+      }
+      #floating-panel {
+        position: absolute;
+        top: 60px;
+        right: 20px;
+        z-index: 5;
+        background-color: #fff;
+        text-align: center;
+        font-family: 'Roboto','sans-serif';
+        line-height: 25px;
+        padding-left: 10px;
+      }
+      #floating-panel {
+        margin-left: -52px;
+      }
+    </style>
+      
+  </head>
+
+  <body>
+        <div class="container">
+            <div class="row">
+                <a class="btn btn-sm btn-default" href="index.html">Map of existing solutions</a>
+                <a class="btn btn-sm btn-info" href="ajouter.html">Add new solution to the database</a>
+            </div>
+        </div>
+
+        <div class="container">
+
+          <div class="row">
+              <div class="col-md-12" style="margin-top: 10px;">
+                  <a id="floating-btn-2" class="btn btn-sm btn-success pull-right" data-toggle="modal" data-target="#favoritesModal">List existing solutions</a>
+                  <a id="floating-btn"  class="btn btn-sm btn-default" role="button" data-toggle="collapse" data-parent="#accordion" href="#filter">Filter</a>
+                  <div id="floating-panel">
+                    <div id="filter" class="panel-collapse collapse">
+                        <div class="col-md-12" style="padding-top:10px;">
+                              <div class="form-group">
+                                  <select name="Type" class="form-control" id="Type">
+				      <option>Type</option>
+                                      <option value="Mobile" >Mobile</option>
+                                      <option value="Web" >Web</option>
+                                      <option value="Java" >Java</option>
+                                      <option value="Web + mobile" >Web + mobile</option>
+                                      <option value="Drone" >Drone</option>
+                                      <option value="Other" >Other</option>
+                                  </select>
+                              </div>
+                              <div class="form-group">
+                                  <select name="Status" class="form-control" id="Status">
+                                      <option>Status</option>
+                                      <option value="Under construction" >Under construction</option>
+                                      <option value="Testing" >Testing</option>
+                                      <option value="Demo version" >Demo version</option>
+                                      <option value="Working" >Working</option>
+                                      <option value="Awarded" >Awarded</option>
+                          	  </select>
+                              </div>
+                              <div class="form-group">
+                                  <select name="Origin" class="form-control" id="Origin">
+                                      <option >Continent</option>
+                                      <option value="Africa" >Africa</option>
+                                      <option value="Asia Pacific" >Asia and Pacific</option>
+                                      <option value="Australasia Pacific" >Australasia Pacific</option>
+				      <option value="Europe" >Europe</option>
+	       			      <option value="North America" >North America</option>
+                                      <option value="South America" >South America</option>
+                                  </select>
+                              </div>
+                          </div>
+                        
+                    </div>
+                </div>
+                <div id="map"></div>
+              </div>
+          </div>
+
+        </div><!-- /.container -->
+      
+      <div class="modal fade" id="favoritesModal" 
+             tabindex="-1" role="dialog" 
+             aria-labelledby="favoritesModalLabel">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" 
+                          data-dismiss="modal" 
+                          aria-label="Close">
+                          <span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" 
+                        id="favoritesModalLabel">List of existing solutions</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-12" style="margin-top: 10px;">
+                                <div id="visualization"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" 
+                           class="btn btn-default" 
+                           data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+      
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+      
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCtRuDbjjrHacZ6EqZySofNueLBLkrNxwI&callback=initMap"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+                
+      var queries = [];
+      var categories = ['langue','type'];
+      var map;
+      var layer;
+        
+      var _langue, _type, _status, _category1;
+      
+      function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: {lat: 25, lng:  25.1},
+                zoom: 2
+              });
+
+            layer = new google.maps.FusionTablesLayer({
+                query: {
+                  select: '\'Applications Markers\'',
+                  from: '1sxcsH821Lzk3N2jieHrpmubotsYfyiJ_Ot1HEP6q'
+                }
+            });
+            layer.setMap(map);
+
+            google.maps.event.addDomListener(document.getElementById('Type'),
+                'change', function() {
+                  _type = this.value;
+                  updateLayerQuery(layer);
+            });
+          
+            google.maps.event.addDomListener(document.getElementById('Status'),
+                'change', function() {
+                  _status = this.value;
+                  updateLayerQuery(layer);
+            });
+          
+            google.maps.event.addDomListener(document.getElementById('Origin'),
+                'change', function() {
+                  _category1 = this.value;
+                  updateLayerQuery(layer);
+            });
+        }
+            
+        function updateLayerQuery(layer) {
+            var where = [];
+            if(_type) where.push("Type = '" +_type + "'");
+            if(_status) where.push("Status = '" +_status + "'");
+            if(_category1) where.push("Origin = '" +_category1 + "'");
+            
+            layer.setOptions({
+              query: {
+                  select: '\'Applications Markers\'',
+                  from: '1sxcsH821Lzk3N2jieHrpmubotsYfyiJ_Ot1HEP6q',
+                  where: where.join(' AND ')
+              }
+            });
+            
+            drawTable();
+        }
+        
+        google.load('visualization', '1', { packages: ['table'] });
+
+        function drawTable() {
+            var where = [];
+            if(_type) where.push("Type = '" +_type + "'");
+            if(_status) where.push("Status = '" +_status + "'");
+            if(_category1) where.push("Origin = '" +_category1 + "'");
+            
+            var select = "Solution as Solution, Developer as Developer,Type as Type, Status as Status, Origin as Origin, Address as Organisation, Phone as Phone, Email as Email, Site as Site";
+            
+            //var select = "*";
+            if(where.length<=0) {
+                var query = "SELECT " + select + ' FROM 1sxcsH821Lzk3N2jieHrpmubotsYfyiJ_Ot1HEP6q';
+            }
+            else{
+                var query = "SELECT " + select + ' FROM 1sxcsH821Lzk3N2jieHrpmubotsYfyiJ_Ot1HEP6q WHERE '+where.join(' AND ');
+            }
+
+            var queryText = encodeURIComponent(query);
+            var gvizQuery = new google.visualization.Query(
+                'http://www.google.com/fusiontables/gvizdata?tq=' + queryText);
+
+            gvizQuery.send(function(response) {
+              var table = new google.visualization.Table(
+                  document.getElementById('visualization'));
+                  table.draw(response.getDataTable(), {
+                        showRowNumber: true
+              });
+            });
+            
+        }
+
+        google.setOnLoadCallback(drawTable);
+        
+        
+    </script>
+
+  </body>
+</html>

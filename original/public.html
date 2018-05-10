@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="JOEINJATOVO Manjaka">
+
+    <title>Application</title>
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/starter-template.css" rel="stylesheet">
+    <link href="css/font-awesome.min.css" rel="stylesheet">
+      
+    <style>
+       #map {
+        height: 500px;
+        width: 100%;
+       }
+      #floating-btn {
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        z-index: 5;
+        padding: 5px;
+        line-height: 30px;
+        padding-left: 10px;
+      }
+      #floating-panel {
+        position: absolute;
+        top: 60px;
+        right: 20px;
+        z-index: 5;
+        background-color: #fff;
+        text-align: center;
+        font-family: 'Roboto','sans-serif';
+        line-height: 30px;
+        padding-left: 10px;
+      }
+      #floating-panel {
+        margin-left: -52px;
+      }
+    </style>
+      
+  </head>
+
+  <body>
+        <div class="container">
+
+          <div class="row">
+              <div class="col-md-12" style="margin-top: 10px;">
+                  <a id="floating-btn"  class="btn btn-sm btn-default" role="button" data-toggle="collapse" data-parent="#accordion" href="#filter">Filtre</a>
+                  <div id="floating-panel">
+                    <div id="filter" class="panel-collapse collapse">
+                        <div class="col-md-12" style="padding-top:10px;">
+                              <div class="form-group">
+                                  <select name="langue" class="form-control" id="langue">
+                                      <option>Langue de l'application</option>
+                                      <option value="Fran&ccedil;ais" >Fran&ccedil;ais</option>
+                                      <option value="English" >English</option>
+                                      <option value="Fran&ccedil;ais_English" >Fran&ccedil;ais_English</option>
+                                  </select>
+                              </div>
+                              <div class="form-group">
+                                  <select name="type" class="form-control" id="type">
+                                      <option>Type de l'application</option>
+                                      <option value="Mobile" >Mobile</option>
+                                      <option value="Web" >Web</option>
+                                      <option value="Java" >Java</option>
+                                      <option value="Android" >Android</option>
+                                      <option value="Drone" >Drone</option>
+                                      <option value="Autre" >Autre</option>
+                                  </select>
+                              </div>
+                              <div class="form-group">
+                                  <select name="status" class="form-control" id="status">
+                                      <option>Status de l'application</option>
+                                      <option value="Encours" >En cours</option>
+                                      <option value="Fini" >Fini</option>
+                                      <option value="Operationel" >Operationel</option>
+                                  </select>
+                              </div>
+                              <div class="form-group">
+                                  <select name="category1" class="form-control" id="category1">
+                                      <option >Autres Categories de l'application</option>
+                                      <option value="a" >a</option>
+                                      <option value="b" >b</option>
+                                      <option value="c" >c</option>
+                                      <option value="d" >d</option>
+                                  </select>
+                              </div>
+                          </div>
+                    </div>
+                </div>
+                <div id="map"></div>
+              </div>
+          </div>
+
+        </div><!-- /.container -->
+      
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCtRuDbjjrHacZ6EqZySofNueLBLkrNxwI&callback=initMap"></script>
+    
+    <script type="text/javascript">
+                
+      var queries = [];
+      var categories = ['langue','type'];
+      var map;
+      var layer;
+        
+      var _langue, _type, _status, _category1;
+      
+      function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: {lat: -18.90132, lng:  47.52659},
+                zoom: 5
+              });
+
+            layer = new google.maps.FusionTablesLayer({
+                query: {
+                  select: '\'Applications Markers\'',
+                  from: '1sxcsH821Lzk3N2jieHrpmubotsYfyiJ_Ot1HEP6q'
+                }
+            });
+            layer.setMap(map);
+
+          
+            google.maps.event.addDomListener(document.getElementById('langue'),
+                'change', function() {
+                  _langue = this.value;
+                  updateLayerQuery(layer);
+            });
+          
+            google.maps.event.addDomListener(document.getElementById('type'),
+                'change', function() {
+                  _type = this.value;
+                  updateLayerQuery(layer);
+            });
+          
+            google.maps.event.addDomListener(document.getElementById('status'),
+                'change', function() {
+                  _status = this.value;
+                  updateLayerQuery(layer);
+            });
+          
+            google.maps.event.addDomListener(document.getElementById('category1'),
+                'change', function() {
+                  _category1 = this.value;
+                  updateLayerQuery(layer);
+            });
+        }
+        
+            
+        function updateLayerQuery(layer) {
+            var where = [];
+            if(_langue) where.push("langue = '" +_langue + "'");
+            if(_type) where.push("type = '" +_type + "'");
+            if(_status) where.push("status = '" +_status + "'");
+            if(_category1) where.push("category1 = '" +_category1 + "'");
+            
+            layer.setOptions({
+              query: {
+                  select: '\'Applications Markers\'',
+                  from: '1sxcsH821Lzk3N2jieHrpmubotsYfyiJ_Ot1HEP6q',
+                  where: where.join(' AND ')
+              }
+            });
+        }
+        
+    </script>
+  </body>
+</html>
